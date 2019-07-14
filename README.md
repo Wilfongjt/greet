@@ -1,0 +1,2 @@
+# greet
+Sample amazon gateway

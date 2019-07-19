@@ -11,7 +11,7 @@
 #
 # Happy Coding!
 
-service: greet-gateway/ # NOTE: update this with your service name
+service: greet-gateway # NOTE: update this with your service name
 
 # You can pin your service to only deploy with a specific Serverless version
 # Check out our docs for more details
@@ -19,31 +19,35 @@ service: greet-gateway/ # NOTE: update this with your service name
 
 provider:
   name: aws
-  runtime: nodejs8.10
-
-# you can overwrite defaults here
-#  stage: dev
-#  region: us-east-1
-
-# you can add statements to the Lambda function's IAM Role here
-#  iamRoleStatements:
-#    - Effect: "Allow"
-#      Action:
-#        - "s3:ListBucket"
-#      Resource: { "Fn::Join" : ["", ["arn:aws:s3:::", { "Ref" : "ServerlessDeploymentBucket" } ] ]  }
-#    - Effect: "Allow"
-#      Action:
-#        - "s3:PutObject"
-#      Resource:
-#        Fn::Join:
-#          - ""
-#          - - "arn:aws:s3:::"
-#            - "Ref" : "ServerlessDeploymentBucket"
-#            - "/*"
+  runtime: nodejs10.x
+  # you can overwrite defaults here
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'us-east-1'
+  profile: ${self:custom.profiles.${self:provider.stage}}
+  #profile: ${self:provider.stage}Profile
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "lambda:InvokeFunction"
+      Resource: "*"
+    - Effect: "Allow"
+      Action:
+        - "dynamodb:*"
+      Resource: "*"
+    - Effect: "Allow"
+      Action:
+        - "s3:*"
+      Resource: "*"
 
 # you can define service wide environment variables here
 #  environment:
 #    variable1: value1
+  environment:
+    SERVICE_NAME: ${self:service}
+    #STAGE_NAME: ${self:provider.stage}
+    # TABLE_NAME: documents_${self:provider.stage}
+
+
 
 # you can add packaging information here
 #package:
@@ -57,7 +61,12 @@ provider:
 functions:
   hello:
     handler: handler.hello
-
+    description: "Greet hello."
+    events:
+      - http:
+          method: get
+          path: hello
+          cors: true
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
 #    Check the event documentation for details
@@ -88,10 +97,6 @@ functions:
 #          pool: MyUserPool
 #          trigger: PreSignUp
 
-#    Define function environment variables here
-#    environment:
-#      variable2: value2
-
 # you can add CloudFormation resource templates here
 #resources:
 #  Resources:
@@ -103,3 +108,29 @@ functions:
 #     NewOutput:
 #       Description: "Description for the output"
 #       Value: "Some output value"
+plugins:
+  - serverless-domain-manager
+
+custom:
+    #defaultStage: dev
+    # use input stage otherwise use provider.stage
+    stage: ${opt:stage, 'dev'}
+
+    profiles:
+      dev: devProfile
+      prod: prodProfile
+      test: testProfile
+
+    domains:
+      dev: dev-api.lyttlebit.com
+      prod: api.lyttlebit.com
+      test: test-api.lyttlebit.com
+
+    customDomain:
+      basePath: 'greet' # This will be prefixed to all routes
+      endpointType: 'edge'
+      # stage: ${self:provider.stage}
+      # lookup domain based on stage
+      domainName: "${self:custom.domains.${self:custom.stage}}" # Change this to your domain.
+      certificateName: "${self:custom.domains.${self:custom.stage}}"
+      createRoute53Record: true

@@ -1,0 +1,15 @@
+{
+  "name": "greet-gateway",
+  "version": "1.0.0",
+  "description": "",
+  "main": "handler.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "James Wilfong <wilfongjt@gmail.com>",
+  "license": "ISC",
+  "devDependencies": {
+    "serverless-domain-manager": "^3.2.6"
+  }
+}

@@ -1,0 +1,33 @@
+Resources:
+  Table1:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: ${self:custom.tableDeletionPolicy}
+    Properties:
+      TableName: ${self:custom.tableName}
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+        - AttributeName: sk
+          AttributeType: S
+        - AttributeName: data
+          AttributeType: S
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+        - AttributeName: sk
+          KeyType: RANGE
+      # Set the capacity to auto-scale
+      BillingMode: PAY_PER_REQUEST
+          #ProvisionedThroughput:
+          #  ReadCapacityUnits: 0
+          #  WriteCapacityUnits: 0
+      GlobalSecondaryIndexes:
+        - IndexName: gsi_1_${self:custom.tableName}
+          KeySchema:
+            - AttributeName: sk
+              KeyType: HASH
+            - AttributeName: data
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+          # Set the capacity to auto-scale

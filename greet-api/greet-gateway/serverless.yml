@@ -132,3 +132,4 @@ resources:
   # DynamoDB
   # be careful files are very sensitive to non-visible character dont cut and paste
   - ${file(resources/dynamodb-table.yml)}
+  # - ${file(resources/cognito-user-pool.yml)}

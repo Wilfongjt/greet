@@ -1,6 +1,8 @@
 'use strict';
 const AWS = require('aws-sdk');
 const docClient = new AWS.DynamoDB.DocumentClient({apiVersion: '2012-08-10'});
+const authorizer = require('./authorizer');
+
 module.exports.hello = async (event) => {
   let message = "hello";
   const name = event.queryStringParameters && event.queryStringParameters.name;
@@ -116,3 +118,65 @@ module.exports.index = async (event) => {
   }
 
 };
+
+// module.exports.generateToken = (event, context, callback) => {
+module.exports.generateToken = async (event, context) => {
+  console.log('generateToken 1');
+  const token = authorizer.generateToken(event.body);
+  console.log('generateToken 2' + token);
+
+  const response = {
+    statusCode: 200,
+    body: JSON.stringify({
+      token
+    })
+  };
+  console.log('generateToken out');
+  // callback(null, response);
+  return response;
+};
+/*
+module.exports.generateToken = (event, context, callback) => {
+  const token = authorizer.generateToken(event.body);
+  console.log(token);
+
+  const response = {
+    statusCode: 200,
+    body: JSON.stringify({
+      token
+    })
+  };
+  callback(null, response);
+};
+*/
+module.exports.authorize = async (event, context) => {
+  console.log('authorize 1');
+  try {
+    console.log(event.authorizationToken);
+    console.log(event.methodArn);
+    const policy = authorizer.generatePolicy(event.authorizationToken, event.methodArn);
+    // callback(null, policy);
+    console.log('authorize out');
+
+    return policy;
+  } catch (error) {
+    console.log(error.message);
+    // callback(error.message);
+    console.log('authorize error out');
+    return error.message;
+  }
+};
+
+/*
+module.exports.authorize = (event, context, callback) => {
+  try {
+    console.log(event.authorizationToken);
+    console.log(event.methodArn);
+    const policy = authorizer.generatePolicy(event.authorizationToken, event.methodArn);
+    callback(null, policy);
+  } catch (error) {
+    console.log(error.message);
+    callback(error.message);
+  }
+};
+*/

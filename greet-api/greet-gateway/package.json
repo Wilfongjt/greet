@@ -11,5 +11,8 @@
   "devDependencies": {
     "serverless-domain-manager": "^3.2.6"
   },
-  "description": ""
+  "description": "",
+  "dependencies": {
+    "jsonwebtoken": "^8.5.1"
+  }
 }

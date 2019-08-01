@@ -1,3 +1,4 @@
+
 service: greet-gateway # NOTE: update this with your service name
 
 provider:
@@ -61,6 +62,7 @@ functions:
           path: hello
           cors: true
           private: true # apikey
+          authorizer: authorize
   goodbye:
     handler: handler.goodbye
     description: "Goodbye."
@@ -80,6 +82,15 @@ functions:
           path: index
           cors: true
           private: true # apikey
+  generateToken:
+    handler: handler.generateToken
+    events:
+      - http:
+          path: register
+          method: post
+          private: true
+  authorize:
+    handler: handler.authorize
 
 plugins:
   # configures custom domain ...
@@ -131,5 +142,9 @@ resources:
   - ${file(resources/api-gateway-errors.yml)}
   # DynamoDB
   # be careful files are very sensitive to non-visible character dont cut and paste
-  - ${file(resources/dynamodb-table.yml)}
+  # including table resources (resources/dynamodb-table.yml) will cause a deploy errror
+  #  * ServerlessError: An error occurred: Table1 - greet_dev already exists.
+  # uncomment the following to create a table from scratch
+  # - ${file(resources/dynamodb-table.yml)}
+  # cognito not used yet
   # - ${file(resources/cognito-user-pool.yml)}

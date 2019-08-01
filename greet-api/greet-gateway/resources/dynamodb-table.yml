@@ -1,7 +1,11 @@
+# table resources will cause a deploy errror
+# ServerlessError: An error occurred: Table1 - greet_dev already exists.
+# if you want to create a new table when none exists then include this file
+
 Resources:
   Table1:
     Type: AWS::DynamoDB::Table
-    DeletionPolicy: ${self:custom.tableDeletionPolicy}
+    DeletionPolicy: Retain # ${self:custom.tableDeletionPolicy}
     Properties:
       TableName: ${self:custom.tableName}
       AttributeDefinitions:

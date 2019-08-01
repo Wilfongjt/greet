@@ -2,6 +2,7 @@ service: greet-gateway # NOTE: update this with your service name
 
 provider:
   name: aws
+  basePath: 'greet'
   runtime: nodejs10.x
   # try to put changeable stuff here and refer back to it
   # you can pass --stage from command line
@@ -16,6 +17,8 @@ provider:
   tableName: greet_${self:provider.stage}
   # Retain says create but dont overwrite existing data table
   tableDeletionPolicy: Retain
+
+  tableGSI_1: gsi_1_${self:provider.tableName}
   # apiKeys are first step to securing your gateway api service
   # apiKeys remove the browser's access to the gateway.
   # apiKeys will appear in command window on deploy
@@ -31,6 +34,8 @@ provider:
     STAGE_NAME: ${self:provider.stage}
     # reference from your lambda...switch tween dev, test, and prod tables
     TABLE_NAME: ${self:provider.tableName}
+    # index for TABLE_NAME
+    GSI_1: ${self:provider.tableGSI_1}
 
   iamRoleStatements:
     - Effect: "Allow"
@@ -65,6 +70,17 @@ functions:
           path: goodbye
           cors: true
           private: true # apikey
+
+  index:
+    handler: handler.index
+    description: "returns index to documents for given words."
+    events:
+      - http:
+          method: get
+          path: index
+          cors: true
+          private: true # apikey
+
 plugins:
   # configures custom domain ...
   - serverless-domain-manager
@@ -77,6 +93,8 @@ custom:
     # Set the table name here so we can use it while testing locally
     tableName: ${self:provider.tableName}
     tableDeletionPolicy: ${self:provider.tableDeletionPolicy}
+    gsi_1: ${self:provider.tableGSI_1}
+
     profiles:
       dev: devProfile
       prod: prodProfile
@@ -96,7 +114,7 @@ custom:
       #prod: api.lyttlebit.com
       #test: test-api.lyttlebit.com
     customDomain:
-      basePath: 'greet' # This will be prefixed to all routes
+      basePath: ${self:provider.basePath} # This will be prefixed to all routes
       endpointType: 'edge'
 
       # stage: ${self:provider.stage}
@@ -114,3 +132,4 @@ resources:
   # DynamoDB
   # be careful files are very sensitive to non-visible character dont cut and paste
   - ${file(resources/dynamodb-table.yml)}
+  # - ${file(resources/cognito-user-pool.yml)}

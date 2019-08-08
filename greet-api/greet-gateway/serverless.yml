@@ -6,7 +6,7 @@ provider:
   basePath: 'greet'
   runtime: nodejs10.x
   # try to put changeable stuff here and refer back to it
-  # you can pass --stage from command line
+  # you can pass --stage from command line, lowercase
   stage: ${opt:stage, 'dev'}
   # required parameter from command line --domain
   domainName: ${opt:domain}
@@ -31,7 +31,7 @@ provider:
   #    variable1: value1
   environment:
     SERVICE_NAME: ${self:service}
-    # reference from your lambda
+    # reference from your lambda, lowercase
     STAGE_NAME: ${self:provider.stage}
     # reference from your lambda...switch tween dev, test, and prod tables
     TABLE_NAME: ${self:provider.tableName}
@@ -53,26 +53,44 @@ provider:
       Resource: "*"
 
 functions:
-  hello:
-    handler: handler.hello
-    description: "Greet hello."
+  authorize:
+    handler: handler.authorize
+
+  # register:
+  #  handler: handler.register
+  #  description: "Signup to use services"
+  #  events:
+  #    - http:
+  #        path: register
+  #        method: post
+  #        cors: true
+  signin:
+    handler: handler.signin
+    description: "An authorized signin will return a JWT"
     events:
       - http:
-          method: get
+          path: signin
+          method: post
+          cors: true
+
+  hello:
+    handler: handler.hello
+    description: "returns Greet hello + name. guest"
+    events:
+      - http:
+          method: post
           path: hello
           cors: true
-          private: true # apikey
-          authorizer: authorize
+          authorizer: authorize # requires a login
+          # private: true # apikey
   goodbye:
     handler: handler.goodbye
-    description: "Goodbye."
+    description: "Returns Goodbye. Public"
     events:
       - http:
           method: get
           path: goodbye
           cors: true
-          private: true # apikey
-
   index:
     handler: handler.index
     description: "returns index to documents for given words."
@@ -81,16 +99,8 @@ functions:
           method: get
           path: index
           cors: true
-          private: true # apikey
-  generateToken:
-    handler: handler.generateToken
-    events:
-      - http:
-          path: register
-          method: post
-          private: true
-  authorize:
-    handler: handler.authorize
+          # private: true # apikey
+          authorizer: authorize # requires a signin
 
 plugins:
   # configures custom domain ...

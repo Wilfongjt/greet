@@ -1,49 +1,88 @@
 'use strict';
+const _ = require('lodash');
 const jwt = require('jsonwebtoken');
 const SECRET_KEY = 'secretKey';
+// const users = require('./users');
+const JWT_EXPIRATION_TIME = '5m';
 
-module.exports.generatePolicy = (token, methodArn) => {
-  if(this.decodeToken(token) != null) {
-    // token was decoded successfully
-    console.log('yey');
-    return generatePolicy('user', 'Allow', methodArn);
-  } else {
-    // token did not decode properly
-    console.log('nah');
-    const error = new Error('Unauthorized');
-    throw error;
-  }
+const authorizeUser =  (userScopes, methodArn) => {
+  // check privileges
+  // search user's privileges for one thjat matches the end of methodaArn
+  const hasValidScope = _.some(userScopes, scope => _.endsWith(methodArn, scope));
+  return hasValidScope;
 };
-
 module.exports.generateToken = jsonToSign => {
-  var token = jwt.sign(jsonToSign, SECRET_KEY);
-  console.log('hi');
+  var token = jwt.sign(jsonToSign, SECRET_KEY, { expiresIn: JWT_EXPIRATION_TIME });
   return token;
 };
 
 module.exports.decodeToken = token => {
   try {
     var decoded = jwt.verify(token, SECRET_KEY);
-    console.log(decoded);
+    // console.log(decoded);
     return decoded;
   } catch (error) {
     console.log(error);
     return null;
   }
 };
-var generatePolicy = function(principalId, effect, resource) {
-  var authResponse = {};
-  authResponse.principalId = principalId;
+module.exports.authorizeMe = (userScopes, methodArn) => {
+  return authorizeUser(userScopes, methodArn);
+};
+
+// module.exports.generatePolicy = (token, methodArn) => {
+/**
+  * Returns an IAM policy document for a given user and resource.
+  *
+  * @method generatePolicy
+  * @param {String} userId - user id
+  * @param {String} effect  - Allow / Deny
+  * @param {String} resource - resource ARN
+  * @param {String} context - response context
+  * @returns {Object} policyDocument
+  */
+module.exports.generatePolicy = (userId, effect, resource, authorizerContext) => {
+  var policy = {};
+  policy.principalId = userId;
   if (effect && resource ) {
+    // policyDocument
     var policyDocument = {};
     policyDocument.Version = '2012-10-17';
     policyDocument.Statement = [];
-    var statementOne = {};
-    statementOne.Action = 'execute-api:Invoke';
-    statementOne.Effect = effect;
-    statementOne = resource;
-    policyDocument.Statement = statementOne;
-    authResponse.policyDocument = policyDocument;
+    // Statement
+    var statementOne = {
+      Action: 'execute-api:Invoke',
+      Effect: effect,
+      Resource: resource
+    };
+    // assemble the policy
+    policyDocument.Statement.push(statementOne);
+    policy.policyDocument = policyDocument;
+    policy.context = authorizerContext;
   }
-  return authResponse;
+  return policy;
+
 };
+/*
+var generateIAMPolicy = function(userId, effect, resource, authorizerContext) {
+  var policy = {};
+  policy.principalId = userId;
+  if (effect && resource ) {
+    // policyDocument
+    var policyDocument = {};
+    policyDocument.Version = '2012-10-17';
+    policyDocument.Statement = [];
+    // Statement
+    var statementOne = {
+      Action: 'execute-api:Invoke',
+      Effect: effect,
+      Resource: resource
+    };
+    // assemble the policy
+    policyDocument.Statement.push(statementOne);
+    policy.policyDocument = policyDocument;
+    policy.context = authorizerContext;
+  }
+  return policy;
+};
+*/

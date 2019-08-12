@@ -1,0 +1,14 @@
+version: '3'
+# docker-compose up
+services:
+  web:
+    container_name: greet
+    image: wilfongjt/greet
+    build:
+      context: ./greet-web/
+    command: >
+      bash -c "npm install && npm run dev"
+    volumes:
+      - ./greet-web:/usr/src
+    ports:
+      - "3000:3000"

@@ -1,0 +1,45 @@
+class AWSHeader {
+  constructor( awsSystem, aws_api_key ){
+    this.api_key = aws_api_key;
+    this.session_token = undefined;
+
+    /* this.url_read = 'http://{A}:{B}/api/v2/user/session/'
+      .replace('{A}',awsSystem.host)
+      .replace('{B}', awsSystem.port)
+    */
+    this.header = {}
+
+    // console.log('DFHeader session_token: ' + this.session_token )
+  }
+  setAttribute(name, value){
+    this.header[name] = value
+  }
+  /*
+  setToken( aws_session_token ){
+    // this.session_token = aws_session_token; //? aws_session_token : undefined;
+    // this.header[]=
+    throw new Exception('AWSHeader setToken needs coding')
+    return this;
+  }
+  */
+
+  processResponce ( resp ) {
+
+    this.setToken(resp['data']['session_token']);
+  }
+
+  json () {
+    let rc = {}
+    for(itm in this.header){
+      rc[this.header[itm].name] = this.header[itm].value
+    }
+    return  rc;
+  }
+
+  data () {
+    return JSON.stringify( this.json() );
+  }
+
+
+}
+export { AWSHeader }
